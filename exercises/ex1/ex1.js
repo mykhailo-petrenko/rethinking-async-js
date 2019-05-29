@@ -9,6 +9,7 @@ function fakeAjax(url,cb) {
 	console.log("Requesting: " + url);
 
 	setTimeout(function(){
+		console.log("Responding: " + url);
 		cb(fake_responses[url]);
 	},randomDelay);
 }
@@ -19,11 +20,37 @@ function output(text) {
 
 // **************************************
 // The old-n-busted callback way
+class AjaxQueue {
+	constructor() {
+		this._responsesCount = 0;
+		this._expectedResponsesCount = 0;
+		this._queue = [];
+	}
+
+	printResult() {
+		this._queue.forEach(output);
+	}
+
+	getHandler() {
+		const order = this._expectedResponsesCount;
+		this._expectedResponsesCount++;
+
+		return (text) => {
+			this._queue[order] = text;
+			this._responsesCount++;
+
+			if (this._responsesCount === this._expectedResponsesCount) {
+				this.printResult();
+			}
+		}
+	}
+}
+
+const q = new AjaxQueue();
 
 function getFile(file) {
-	fakeAjax(file,function(text){
-		// what do we do here?
-	});
+	const handler = q.getHandler();
+	fakeAjax(file, handler);
 }
 
 // request all files at once in "parallel"
