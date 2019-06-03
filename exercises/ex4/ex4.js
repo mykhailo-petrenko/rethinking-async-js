@@ -33,4 +33,25 @@ function getFile(file) {
 // but only once previous rendering
 // is done.
 
-// ???
+function getFiles(urls) {
+	const responses = [];
+	
+	return urls
+		.map(getFile)
+		.reduce((prev, next) => {
+			return prev.then(text => {
+				responses.push(text);
+				return next;
+			})
+		})
+		.then(text => {
+			responses.push(text);
+			return responses;
+		});
+}
+
+getFiles([
+	'file1',
+	'file2',
+	'file3'
+]).then(responses => responses.forEach(output));
