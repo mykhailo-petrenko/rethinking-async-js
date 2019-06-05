@@ -20,7 +20,7 @@ function output(text) {
 // **************************************
 
 function getFile(file) {
-	return ASQ(function(done){
+	return new Promise(function(done){
 		fakeAjax(file,done);
 	});
 }
@@ -32,4 +32,37 @@ function getFile(file) {
 // but only once previous rendering
 // is done.
 
-// ???
+function *fetchFiles() {
+	const r1 = getFile('file1');
+	const r2 = getFile('file2');
+	const r3 = getFile('file3');
+
+	output(yield r1);
+	output(yield r2);
+	output(yield r3);
+
+	return "Complete";
+};
+
+chainResolver(fetchFiles());
+
+async function chainResolver(gen) {
+	let prev;
+	while (true) {
+		const {done, value} = gen.next(prev);
+
+		if (done) {
+			output(value);
+			break;
+		}
+
+		prev = await value;
+	}
+}
+
+// let gen = fetchFiles();
+// gen.next().value
+// 	.then((text) => gen.next(text).value)
+// 	.then((text) => gen.next(text).value)
+// 	.then((text) => gen.next(text).value)
+// 	.then(output);
